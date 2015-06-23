@@ -1,53 +1,51 @@
 // Toy Virtual Machine
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instruction set:
-//    PSH 5; pushes 5 to the stack
-//    PSH 10; pushes 10 to the stack
-//    ADD; pops two values on top of the stack, adds them pushes to stack
-//    POP; pops the value on the stack, will also print it for debugging
-//    SET A 0; sets register A to 0
-//    HLT; stop the program
+// Instruction set implementation:
+//
+//    PSH, 5;   pushes 5 to the stack
+//    PSH, 6;   pushes 6 to the stack
+//    ADD;      pop two values, add together, push result to stack
+//    POP;      pop the addition result (11) from the stack, also print it
+//    HLT;      stop the program
+//
 ///////////////////////////////////////////////////////////////////////////////
 
-enum InstructionSet
+#include <stdio.h>
+
+enum EInstructionSet
 {
   PSH,
-  ADD,
   POP,
-  SET,
+  ADD,
+  SUB,
   HLT
 };
 
-enum Registers
+enum ERegisters
 {
   A, B, C, D, E, F,
 
   NUM_OF_REGISTERS
 };
 
-bool running = true;
-int ip = 0;
-int sp = -1;
-int stack[256]; // use a define or something here preferably
-int registers[NUM_OF_REGISTERS];
+class CToyVirtualMachine
+{
+  static const int STACK_SIZE = 256;
 
-const int program[] = {
-  PSH, 5,
-  PSH, 6,
-  ADD,
-  POP,
-  HLT
-};
+  bool running;       // loop mechanism
+  int const * ip;             // instruction pointer
+  int  sp;             // stack pointer
+  int stack[STACK_SIZE];
 
-int fetch() {
-  return program[ip];
-}
+  int registers[NUM_OF_REGISTERS];
 
-#include <stdio.h>
+  int fetch() {
+    return *ip;
+  }
 
-void eval(int instr) {
-  switch (instr) {
+  void eval(int instr) {
+    switch (instr) {
     case HLT: {
       running = false;
     }
@@ -55,7 +53,8 @@ void eval(int instr) {
 
     case PSH: {
       sp++;
-      stack[sp] = program[++ip];
+      stack[sp] = *ip;
+      ++ip;
     }
     break;
 
@@ -84,15 +83,51 @@ void eval(int instr) {
     default:
       printf("Unimplemented opcode: %i\n", instr);
       break;
+    }
   }
-}
+
+public:
+  CToyVirtualMachine()
+    : running(false)
+    , ip(nullptr)
+    , sp(-1)
+  { }
+
+  void Step() {
+    eval(fetch());
+    ++ip; // increment the ip every iteration
+  }
+  
+  void Run() {
+    while (running) {
+      Step();
+    }
+  }
+
+  void Reset(int const * program) {
+    ip = program;
+    sp = -1;
+    // also clear stack?
+    // also clear registers?
+    running = true;
+  }
+};
 
 int main()
 {
-  while (running) {
-    eval(fetch());
-    ip++; // increment the ip every iteration
-  }
+  const int program[] = {
+    PSH, 5,
+    PSH, 6,
+    ADD,
+    POP,
+    HLT
+  };
+
+  CToyVirtualMachine vm;
+
+  vm.Reset(program);
+
+  vm.Run();
 
   return 0;
 }
