@@ -33,9 +33,9 @@ class CToyVirtualMachine
 {
   static const int STACK_SIZE = 256;
 
-  bool running;       // loop mechanism
-  int const * ip;             // instruction pointer
-  int  sp;             // stack pointer
+  bool running;          // loop mechanism
+  int const * ip;        // instruction pointer
+  int sp;                // stack pointer
   int stack[STACK_SIZE];
 
   int registers[NUM_OF_REGISTERS];
@@ -52,14 +52,15 @@ class CToyVirtualMachine
     break;
 
     case PSH: {
-      sp++;
-      stack[sp] = *ip;
+      ++sp;
       ++ip;
+      stack[sp] = *ip;
     }
     break;
 
     case POP: {
-      int val_popped = stack[sp--];
+      int val_popped = stack[sp];
+      --sp;
       printf("popped %d\n", val_popped);
     }
     break;
@@ -73,6 +74,21 @@ class CToyVirtualMachine
 
       // we then add the result and push it to the stack
       int result = b + a;
+      sp++; // increment stack pointer **before**
+      stack[sp] = result; // set the value to the top of the stack
+
+      // all done!
+      break;
+    }
+
+    case SUB: {
+      // pop 2 values from stack
+      int a = stack[sp--];
+      int b = stack[sp--];
+
+      // do the calculation
+      int result = b - a;
+
       sp++; // increment stack pointer **before**
       stack[sp] = result; // set the value to the top of the stack
 
@@ -118,7 +134,7 @@ int main()
   const int program[] = {
     PSH, 5,
     PSH, 6,
-    ADD,
+    SUB,
     POP,
     HLT
   };
