@@ -26,7 +26,7 @@ enum EInstructionSet
 enum ERegisters
 {
   A, B, C, D, E, F,
-  
+
   IP, SP,
   NUM_OF_REGISTERS
 };
@@ -39,107 +39,112 @@ class CToyVirtualMachine
   int *base;
   int ip;                // instruction pointer
   int sp;                // stack pointer
-  
+
   int stack[STACK_SIZE];
 
   int registers[NUM_OF_REGISTERS];
-  
-  #define REG_IP registers[IP]
-  #define REG_SP registers[SP]
-  
+
+#define REG_IP registers[IP]
+#define REG_SP registers[SP]
+
   int fetch() {
     int instr = base[REG_IP];
-	++REG_IP;
-	return instr;
+    ++REG_IP;
+    return instr;
   }
-  
+
   void push(int val) {
-	++REG_SP;
-	stack[REG_SP] = val;
+    ++REG_SP;
+    stack[REG_SP] = val;
   }
-  
+
   int pop() {
-	int val = stack[REG_SP];
-	--REG_SP;
-	return val;
+    int val = stack[REG_SP];
+    --REG_SP;
+    return val;
   }
 
   void eval(int instr) {
-    switch (instr) {
-    case HLT: {
-      Stop();
-    }
-    break;
-
-    case PSH: {
-	  push(fetch());
-    }
-    break;
-
-    case POP: {
-      int val_popped = pop();
-      printf("popped %d\n", val_popped);
-    }
-    break;
-
-    case ADD: {
-      // first we pop the stack and store it as a
-      int a = pop();
-
-      // then we pop the top of the stack and store it as b
-      int b = pop();
-
-      // we then add the result and push it to the stack
-      int result = b + a;	  
-	  push(result);
-
-      // all done!
-      break;
+    switch (instr)
+    {
+    case HLT:
+    {
+              Stop();
+              break;
     }
 
-    case SUB: {
-      // pop 2 values from stack
-      int a = pop();
-      int b = pop();
-
-      // do the calculation
-      int result = b - a;
-      push(result);
-
-      // all done!
-      break;
+    case PSH:
+    {
+              push(fetch());
+              break;
     }
-	
-	case JMP: {
-	
-	  int d = pop();
-	  REG_IP = d;
-	  
-	  break;
-	}
+
+
+    case POP:
+    {
+              int val_popped = pop();
+              printf("popped %d\n", val_popped);
+              break;
+    }
+
+
+    case ADD:
+    {
+              int a = pop();
+              int b = pop();
+
+              int result = b + a;
+
+              push(result);
+
+              break;
+    }
+
+    case SUB:
+    {
+              int a = pop();
+              int b = pop();
+
+              int result = b - a;
+
+              push(result);
+
+              break;
+    }
+
+    case JMP:
+    {
+
+              int d = pop();
+              REG_IP = d;
+
+              break;
+    }
 
     default:
-      printf("Unimplemented opcode: %i\n", instr);
-      break;
+    {
+             printf("Unimplemented opcode: %i\n", instr);
+             break;
+    }
     }
   }
 
 public:
   CToyVirtualMachine()
     : running(false)
-	, base(nullptr)
+    , base(nullptr)
     , ip(-1)
     , sp(-1)
   { }
 
   int GetInstructionPtr() const {
-	return ip;
+    return ip;
   }
-  
+
   void Step() {
     eval(fetch());
   }
-  
+
   void Run() {
     while (running) {
       Step();
@@ -147,12 +152,12 @@ public:
   }
 
   void Stop() {
-	running = false;
+    running = false;
   }
-  
+
   void Reset(int * program) {
     base = program;
-	ip = -1;
+    ip = -1;
     sp = -1;
     // also clear stack?
     // also clear registers?
