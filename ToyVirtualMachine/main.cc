@@ -1,33 +1,42 @@
-// Toy Virtual Machine
-
 ///////////////////////////////////////////////////////////////////////////////
-// Instruction set implementation:
-//
-//    PSH, 5;   pushes 5 to the stack
-//    PSH, 6;   pushes 6 to the stack
-//    ADD;      pop two values, add together, push result to stack
-//    POP;      pop the addition result (11) from the stack, also print it
-//    HLT;      stop the program
-//
+// Toy Virtual Machine
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 
 enum EInstructionSet
 {
-  PSH,
-  POP,
-  ADD,
-  SUB,
-  JMP,
-  HLT
+  PSH,  // value          value to stack
+  POP,  // REG            from stack to register
+  MOV,  // REG, value     
+  ADD,  // REG, value     
+  SUB,  // REG, value     
+  NOP,  // --             dud
+  INT,  // --             trigger a breakpoint
+  HLT   // end
 };
 
 enum ERegisters
 {
-  A, B, C, D, E, F,
+  // General Purpose
 
-  IP, SP,
+  EAX, // Accumulator
+  ECX, // Counter
+  EDX, // Data
+  EBX, // Base
+
+  // Pointer Registers
+
+  ESP, // Stack
+  EBP, // Base
+
+  // Stack Registers
+
+  ESI, // Source Index
+  EDI, // Destination Index
+
+  EIP, // Instruction Pointer
+
   NUM_OF_REGISTERS
 };
 
@@ -37,6 +46,7 @@ class CToyVirtualMachine
 
   bool running;          // loop mechanism
   int *base;
+  int length;
   int ip;                // instruction pointer
   int sp;                // stack pointer
 
@@ -44,8 +54,8 @@ class CToyVirtualMachine
 
   int registers[NUM_OF_REGISTERS];
 
-#define REG_IP registers[IP]
-#define REG_SP registers[SP]
+#define REG_IP registers[EIP]
+#define REG_SP registers[ESP]
 
   int fetch() {
     int instr = base[REG_IP];
@@ -70,54 +80,67 @@ class CToyVirtualMachine
     case HLT:
     {
               Stop();
+
               break;
     }
 
     case PSH:
     {
-              push(fetch());
+              int val = fetch();
+
+              push(val);
+
               break;
     }
 
 
     case POP:
     {
-              int val_popped = pop();
-              printf("popped %d\n", val_popped);
+              int reg = fetch();
+              int val = pop();
+
+              registers[reg] = val;
+
               break;
     }
 
+    case MOV:
+    {
+              int reg = fetch();
+              int val = fetch();
+
+              registers[reg] = val;
+
+              break;
+    }
 
     case ADD:
     {
-              int a = pop();
-              int b = pop();
+              int reg = fetch();
+              int val = fetch();
 
-              int result = b + a;
-
-              push(result);
+              registers[reg] += val;
 
               break;
     }
 
     case SUB:
     {
-              int a = pop();
-              int b = pop();
+              int reg = fetch();
+              int val = fetch();
 
-              int result = b - a;
-
-              push(result);
+              registers[reg] -= val;
 
               break;
     }
 
-    case JMP:
+    case INT:
     {
+              break;
+    }
 
-              int d = pop();
-              REG_IP = d;
-
+    case NOP:
+    {
               break;
     }
 
@@ -133,6 +156,7 @@ public:
   CToyVirtualMachine()
     : running(false)
     , base(nullptr)
+    , length(0)
     , ip(-1)
     , sp(-1)
   { }
@@ -143,6 +167,11 @@ public:
 
   void Step() {
     eval(fetch());
+
+    // sanity check
+    if (REG_IP > length) {
+      running = false;
+    }
   }
 
   void Run() {
@@ -155,8 +184,9 @@ public:
     running = false;
   }
 
-  void Reset(int * program) {
+  void Reset(int * program, const int size) {
     base = program;
+    length = size;
     ip = -1;
     sp = -1;
     // also clear stack?
@@ -166,20 +196,19 @@ public:
 };
 
 int main()
+
 {
   int program[] = {
-    PSH, 5, // 0
-    PSH, 6, // 2 
-    JMP, 6, // 4
-    PSH, 1, // 6
-    ADD,    // 8
-    POP,    // 9
-    HLT     // 10
+    MOV, EAX, 10,
+    NOP,
+    INT,
+
+    HLT
   };
 
   CToyVirtualMachine vm;
 
-  vm.Reset(program);
+  vm.Reset(program, sizeof(program)/sizeof(program[0]));
   vm.Run();
 
   return 0;
