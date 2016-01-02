@@ -5,4 +5,4 @@ My very first virtual machine implementation to aid my understanding of "lower l
 Inspired by Felix Angell's [Implementing a Virtual Machine in C][inspiration] article.
 
 
-[inspiration]: http://www.felixangell.com/virtual-machine-in-c/
+[inspiration]: http://blog.felixangell.com/virtual-machine-in-c/
